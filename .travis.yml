@@ -12,6 +12,9 @@ addons:
       - re2c
       - ccache
       - mysql-server
+      - ldap-utils
+      - openssl
+      - slapd
       - libaspell-dev
       - libbz2-dev
       - libcurl4-gnutls-dev
@@ -21,6 +24,7 @@ addons:
       - libicu-dev
       - libjpeg-dev
       - libkrb5-dev
+      - libldap2-dev
       - libonig-dev
       - libpng-dev
       - libpq-dev
@@ -34,7 +38,6 @@ addons:
       - libxpm-dev
       - libxslt1-dev
       - libzip-dev
-
 
 services:
   - mysql
@@ -65,6 +68,7 @@ env:
       - PDO_MYSQL_TEST_HOST=127.0.0.1
       - PDO_PGSQL_TEST_DSN="pgsql:host=localhost port=5432 dbname=test user=postgres password="
       - REPORT_EXIT_STATUS=1
+      - LDAPTLS_CACERT=/etc/ldap/ssl/server.crt
 
 jobs:
     include:
@@ -88,6 +92,7 @@ before_script:
     # Setup Extensions
     - ./travis/setup-mysql.sh
     - ./travis/setup-pgsql.sh
+    - ./travis/setup-slapd.sh
 
 # Run PHPs run-tests.php
 script:

@@ -68,7 +68,9 @@ $S390X_CONFIG \
 --with-sodium \
 --enable-zend-test=shared \
 --enable-werror \
---with-pear
+--with-pear \
+--with-ldap \
+--with-ldap-sasl
 
 if [[ -z "$CONFIG_ONLY" ]]; then
 	MAKE_JOBS=${MAKE_JOBS:-$(nproc)}
