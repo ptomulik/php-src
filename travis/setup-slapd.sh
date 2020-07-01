@@ -15,10 +15,10 @@ sudo chown -R openldap:openldap /etc/ldap/ssl
 sudo sed -e 's|^\s*SLAPD_SERVICES\s*=.*$|SLAPD_SERVICES="ldap:/// ldaps:/// ldapi:///"|' -i /etc/default/slapd
 
 # Configure LDAP database.
-DN=`sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config '(&(olcRootDN=*)(olcSuffix=*))' dn | grep -i '^dn:'`;
+DBDN=`sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config '(&(olcRootDN=*)(olcSuffix=*))' dn | grep -i '^dn:' | sed -e 's/^dn:\s*//'`;
 
 sudo ldapmodify -Q -Y EXTERNAL -H ldapi:/// << EOF
-$DN
+dn: $DBDN
 changetype: modify
 replace: olcSuffix
 olcSuffix: dc=my-domain,dc=com
@@ -48,15 +48,29 @@ olcAuthzRegexp: uid=usera,cn=digest-md5,cn=auth cn=usera,dc=my-domain,dc=com
 -
 replace: olcLogLevel
 olcLogLevel: -1
+
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: sssvlv.la
+EOF
+
+sudo service slapd restart
+
+sudo ldapadd -Q -Y EXTERNAL -H ldapi:/// << EOF
+dn: olcOverlay=sssvlv,$DBDN
+objectClass: olcSssVlvConfig
+olcSssVlvMax: 10
+olcSssVlvMaxKeys: 5
 EOF
 
 sudo service slapd restart
 
 ldapadd -H ldapi:/// -D cn=Manager,dc=my-domain,dc=com -w secret <<EOF
 dn: dc=my-domain,dc=com
-objectclass: top
-objectclass: organization
-objectclass: dcObject
+objectClass: top
+objectClass: organization
+objectClass: dcObject
 dc: my-domain
 o: php ldap tests
 EOF
