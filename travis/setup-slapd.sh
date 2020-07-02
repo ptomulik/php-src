@@ -4,12 +4,15 @@ set -ev
 # Create TLS certificate
 sudo mkdir -p /etc/ldap/ssl
 
-(cd /etc/ldap/ssl &&
-  sudo openssl req -newkey rsa:4096 -x509 -nodes -out server.crt -keyout server.key -days 3650 \
-       -subj "/C=US/ST=Arizona/L=Localhost/O=localhost/CN=`hostname`")
+sudo openssl req -newkey rsa:4096 -x509 -nodes -days 3650 \
+  -out /etc/ldap/ssl/server.crt -keyout /etc/ldap/ssl/server.key \
+  -subj "/C=US/ST=Arizona/L=Localhost/O=localhost/CN=`hostname`"
 
 sudo chown -R openldap:openldap /etc/ldap/ssl
 
+# Point to the certificate generated
+sudo sed -e 's|^\s*TLS_CACERT|# TLS_CACERT|' -i /etc/ldap/ldap.conf
+echo 'TLS_CACERT /etc/ldap/ssl/server.crt' | sudo tee -a /etc/ldap/ldap.conf
 
 # Configure LDAP protocols to serve.
 sudo sed -e 's|^\s*SLAPD_SERVICES\s*=.*$|SLAPD_SERVICES="ldap:/// ldaps:/// ldapi:///"|' -i /etc/default/slapd
